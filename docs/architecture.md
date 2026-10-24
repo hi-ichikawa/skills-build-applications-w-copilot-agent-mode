@@ -30,13 +30,13 @@ OctoFit Tracker is a three-tier application for a school fitness program. The st
 
 Record your plan here before editing code.
 
-- Presentation tier decision:
-- Logic tier decision:
-- Data tier decision:
-- Activity tracking approach:
-- Team management approach:
-- Leaderboard approach:
-- Workout suggestions approach:
+- Presentation tier decision: Reactコンポーネントは共有APIクライアントでデータ取得し、ローディング・空・エラー状態を表示する
+- Logic tier decision: ExpressルートでHTTP処理を行い、入力検証と集計処理はサービス層に分離する
+- Data tier decision: Mongooseスキーマで必須フィールドと参照関係を定義し、MongoDBに永続化する
+- Activity tracking approach: ObjectIdを検証し、既存のユーザーとチームだけを受け付ける。ポイントはminutesと同値とし、作成日時を記録する
+- Team management approach: 名前がないチームは400で拒否し、既存メンバーのObjectIdを配列で保持する
+- Leaderboard approach: チームごとのactivityポイントを集計し、降順で並べて1から順位を付ける
+- Workout suggestions approach: ユーザーのfitnessGoalと直近の活動種別に対応するワークアウトを検索し、理由を付けて推薦する
 
 ## Test plan
 
