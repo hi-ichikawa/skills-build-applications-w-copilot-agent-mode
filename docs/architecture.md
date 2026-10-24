@@ -36,7 +36,7 @@ Record your plan here before editing code.
 - Activity tracking approach: ObjectIdを検証し、既存のユーザーとチームだけを受け付ける。ポイントはminutesと同値とし、作成日時を記録する
 - Team management approach: 名前がないチームは400で拒否し、既存メンバーのObjectIdを配列で保持する
 - Leaderboard approach: チームごとのactivityポイントを集計し、降順で並べて1から順位を付ける
-- Workout suggestions approach: ユーザーのfitnessGoalと直近の活動種別に対応するワークアウトを検索し、理由を付けて推薦する
+- Workout suggestions approach: ユーザーのfitnessGoalと直近の活動種別に対応するワークアウトを検索し、理由を付けて推薦する。
 
 ## Test plan
 
