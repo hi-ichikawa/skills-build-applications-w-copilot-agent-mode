@@ -58,8 +58,42 @@ export async function listTeams() {
   return Team.find().lean();
 }
 
-export async function createTeam(_input: unknown) {
-  throw Object.assign(new Error('Team validation is not implemented yet'), { status: 501 });
+export async function createTeam(input: unknown) {
+  if (!input || typeof input !== 'object') {
+    throw httpError('Valid team input is required', 400);
+  }
+
+  const { name, mascot, members = [] } = input as {
+    name?: unknown;
+    mascot?: unknown;
+    members?: unknown;
+  };
+  if (typeof name !== 'string' || !name.trim()) {
+    throw httpError('Team name is required', 400);
+  }
+  if (!Array.isArray(members)) {
+    throw httpError('Team members must be an array of user IDs', 400);
+  }
+  if (!members.every((member) => typeof member === 'string' && mongoose.isObjectIdOrHexString(member))) {
+    throw httpError('Invalid team member ID', 400);
+  }
+
+  const memberIds = [...new Set(members as string[])];
+  const foundMembers = await User.find({ _id: { $in: memberIds } }).select('_id').lean();
+  if (foundMembers.length !== memberIds.length) {
+    throw httpError('One or more team members do not exist', 404);
+  }
+
+  const team = await Team.create({
+    name: name.trim(),
+    mascot: typeof mascot === 'string' ? mascot.trim() : '',
+    members: foundMembers.map((member) => member._id),
+  });
+  await User.updateMany(
+    { _id: { $in: foundMembers.map((member) => member._id) } },
+    { $set: { team: team._id } },
+  );
+  return team.toObject();
 }
 
 export async function getLeaderboard() {
