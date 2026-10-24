@@ -117,8 +117,46 @@ export async function getLeaderboard() {
     }));
 }
 
-export async function suggestWorkouts(_userEmail: string) {
-  return Workout.find().limit(1).lean();
+export async function suggestWorkouts(userEmail: string) {
+  const user = await User.findOne({ email: userEmail }).lean();
+  if (!user) {
+    throw httpError('User does not exist', 404);
+  }
+
+  const recentActivity = await Activity.findOne({ user: user._id })
+    .sort({ occurredAt: -1 })
+    .lean();
+  const activityFocusByType: Record<string, string> = {
+    run: 'endurance',
+    cycle: 'endurance',
+    walk: 'mobility',
+    strength: 'strength',
+  };
+  const activityFocus = recentActivity?.type
+    ? activityFocusByType[recentActivity.type.toLowerCase()]
+    : undefined;
+  const preferredFocus = user.fitnessGoal || activityFocus;
+  const focus = preferredFocus || activityFocus;
+
+  const workouts = await Workout.find().lean();
+  const ordered = [...workouts].sort((left, right) => {
+    const leftMatch = left.focus === focus ? 0 : 1;
+    const rightMatch = right.focus === focus ? 0 : 1;
+    return leftMatch - rightMatch;
+  });
+
+  return ordered.map((workout) => {
+    const matchesGoal = workout.focus === user.fitnessGoal;
+    const matchesActivity = workout.focus === activityFocus;
+    const reason = matchesGoal && matchesActivity
+      ? `This ${workout.focus} workout matches your goal and recent ${recentActivity?.type ?? 'activity'} activity.`
+      : matchesGoal
+        ? `This ${workout.focus} workout matches your current fitness goal.`
+        : matchesActivity && recentActivity
+          ? `This ${workout.focus} workout builds on your recent ${recentActivity.type} activity.`
+          : `This ${workout.focus} workout supports your fitness activity.`;
+    return { ...workout, reason };
+  });
 }
 
 export { User };
